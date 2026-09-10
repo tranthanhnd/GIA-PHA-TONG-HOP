@@ -40,16 +40,10 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           tagName: tong-hop-v__VERSION__
-          releaseName: "Gia Phả Việt - Bản Tổng Hợp v__VERSION__"
-          releaseBody: "Bản cài đặt tự động cho Windows và macOS."
+          releaseName: "Gia Phả Việt v__VERSION__"
+          releaseBody: "Bản cài đặt tự động cho Windows và macOS. Bản macOS hiện CHƯA được ký số Apple — người dùng cần vào System Settings > Privacy & Security để bấm Mở thủ công lần đầu."
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
