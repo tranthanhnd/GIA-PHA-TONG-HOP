@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#7b2f22" />
+  <meta name="description" content="Ứng dụng gia phả Việt Nam local-first, theo quy ước Nam hệ." />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="styles.css?v=5" />
+  <link rel="stylesheet" href="member-form-layout.css?v=17" />
+  <link rel="stylesheet" href="vietnamese-name-font.css?v=3" />
+  <style>
+    html,body,button,input,select,textarea,table,h1,h2,h3,h4,h5,h6,strong,b,small,label,p,span,div {
+      font-family: Arial, Helvetica, sans-serif !important;
+      letter-spacing: 0 !important;
+      word-spacing: 0 !important;
+      font-kerning: normal !important;
+      text-rendering: optimizeLegibility;
+    }
+    .clan-switcher{margin:0 5px 20px;padding:12px 10px;background:#ffffff0b;border:1px solid #ffffff12;border-radius:8px}
+    .clan-switcher label{display:block;color:#bfae9d;font-size:9px;margin-bottom:7px}
+    .clan-switcher>div{display:flex;gap:6px}
+    .clan-switcher select{min-width:0;flex:1;background:#49382e;color:#fff;border:1px solid #6d584a;border-radius:6px;padding:8px;font-size:12px}
+    .clan-switcher button{width:34px;border:1px solid #d1a05a;border-radius:6px;background:transparent;color:#edc27f;cursor:pointer;font-size:18px}
+    [hidden]{display:none!important}
+  </style>
+  <title>Gia Phả Việt</title>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand"><div class="seal">家</div><div><strong>GIA PHẢ VIỆT</strong><small>Gia phả dòng họ</small></div></div>
+    <div class="clan-switcher">
+      <label for="clanSwitcher">DÒNG HỌ ĐANG MỞ</label>
+      <div><select id="clanSwitcher" aria-label="Chọn dòng họ"></select><button id="newClanBtn" title="Tạo gia phả mới">＋</button></div>
+    </div>
+    <nav id="nav">
+      <button data-view="dashboard" class="active">⌂ <span>Tổng quan</span></button>
+      <button data-view="tree">⌘ <span>Cây gia phả</span></button>
+      <button data-view="members">♙ <span>Thành viên</span></button>
+      <button data-view="branches">⑂ <span>Chi · Nhánh</span></button>
+      <button data-view="media">▧ <span>Kho tư liệu</span></button>
+      <button data-view="book">▤ <span>Sách gia phả</span></button>
+      <button data-view="data">⇄ <span>Dữ liệu & sao lưu</span></button>
+      <button data-view="settings">⚙ <span>Cài đặt</span></button>
+    </nav>
+    <div class="local-note"><span class="online-dot"></span><div><b>Dữ liệu trên máy</b><small>Tự lưu bản nháp sau 1 giây · Không cần mạng</small></div></div>
+  </aside>
+
+  <main>
+    <header><div><button id="menuBtn" class="icon-btn">☰</button><h1 id="pageTitle">Tổng quan</h1><p id="pageSub">Bức tranh chung về dòng họ</p></div><div class="header-actions"><label class="search">⌕ <input id="globalSearch" placeholder="Nhập tên thành viên cần tìm..." /></label><button class="btn primary" id="quickAdd">＋ Thêm thành viên</button></div></header>
+    <div id="toast" aria-live="polite"></div>
+
+    <section id="dashboard" class="view active"></section>
+    <section id="tree" class="view"></section>
+    <section id="members" class="view"></section>
+    <section id="branches" class="view"></section>
+    <section id="media" class="view"></section>
+    <section id="book" class="view"></section>
+    <section id="data" class="view"></section>
+    <section id="settings" class="view"></section>
+  </main>
+
+  <dialog id="clanDialog">
+    <form id="clanForm" method="dialog">
+      <div class="dialog-head"><div><small>KHÔNG GIAN GIA PHẢ</small><h2>Tạo dòng họ mới</h2></div><button type="button" class="icon-btn" data-close>×</button></div>
+      <div class="form-grid"><label class="wide">Tên dòng họ *<input name="clanName" required placeholder="Ví dụ: Gia phả dòng họ Trần Quốc" /></label><label class="wide">Nguyên quán<input name="origin" placeholder="Tỉnh, thành phố hoặc địa phương" /></label></div>
+      <div class="rule-hint">Dòng họ mới có cây, thành viên, tư liệu và bản sao lưu hoàn toàn riêng biệt.</div>
+      <div class="dialog-actions"><button type="button" class="btn" data-close>Hủy</button><button class="btn primary" value="save">Tạo gia phả</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="personDialog">
+    <form id="personForm" method="dialog" novalidate>
+      <div class="dialog-head"><div><small id="formEyebrow">HỒ SƠ THÀNH VIÊN</small><h2 id="formTitle">Thêm thành viên</h2></div><button type="button" class="icon-btn" data-close>×</button></div>
+      <input type="hidden" name="id" />
+      <div class="avatar-row"><label class="avatar-upload"><img id="avatarPreview" alt="Ảnh đại diện"/><span>＋</span><input type="file" id="avatarInput" accept="image/*" /></label><div><b>Ảnh chân dung</b><small>JPG, PNG · ảnh được lưu trên thiết bị này</small></div></div>
+      <div class="form-grid">
+        <label class="wide">Họ và tên *<input name="name" required placeholder="Nguyễn Văn..." /></label>
+        <label>Giới tính *<select name="gender" required><option value="male">Nam</option><option value="female">Nữ</option><option value="other">Khác</option></select></label>
+        <label>Vai trò<select name="membership"><option value="lineage">Thành viên Nam hệ</option><option value="clan">Thành viên dòng họ</option><option value="spouse">Phối ngẫu</option><option value="external">Ngoại hệ</option></select></label>
+        <label>Đời thứ<input name="generationOverride" type="number" min="1" step="1" placeholder="Ví dụ: 1" /></label>
+        <label class="branch-lineage-field"><span id="branchOrderLabel">Nhánh thứ mấy của đời thứ?</span><input name="branchOrder" type="number" min="1" step="1" placeholder="Ví dụ: 1" /></label>
+        <label class="branch-assignment-field">Thuộc Chi nào?<select name="branchId"></select></label>
+        <label class="descendant-count-field">Có mấy con trai nối dõi? (tạo mấy Nhánh con)<select name="descendantBranchCount"><option value="">— Chưa khai —</option><option value="0">0 – Không có con trai nối dõi</option><option value="1">1 con trai – 1 Nhánh con</option><option value="2">2 con trai – 2 Nhánh con</option><option value="3">3 con trai – 3 Nhánh con</option><option value="4">4 con trai – 4 Nhánh con</option><option value="5">5 con trai – 5 Nhánh con</option><option value="6">6 con trai – 6 Nhánh con</option><option value="7">7 con trai – 7 Nhánh con</option><option value="8">8 con trai – 8 Nhánh con</option><option value="9">9 con trai – 9 Nhánh con</option><option value="10">10 con trai nối dõi trở lên</option></select></label>
+        <label class="branch-lineage-field">Có tạo Nhánh con không?<select name="startsBranch"><option value="no">Không</option><option value="yes">Có – tạo một Nhánh con mới</option></select></label>
+        <div class="rule-hint wide" id="singleChildHint" hidden>Gia đình này hiện chỉ có một người con nên không cần mở hoặc đánh số Nhánh.</div>
+        <label class="wife-count-field">Số người vợ đã biết<select name="declaredWifeCount"><option value="">— Chưa khai —</option><option value="0">0 – Chưa lập gia đình</option><option value="1">1 người vợ</option><option value="2">2 người vợ</option><option value="3">3 người vợ</option><option value="4">4 người vợ</option><option value="5">5 người vợ trở lên</option></select></label>
+        <label class="marriage-field">Vợ/chồng của<select name="spouseOfId"></select></label>
+        <label class="marriage-field">Thứ tự hôn nhân<select name="marriageOrder"><option value="">Không xác định</option><option value="1">Thứ nhất</option><option value="2">Thứ hai</option><option value="3">Thứ ba</option><option value="4">Thứ tư</option><option value="5">Thứ năm</option></select></label>
+        <label class="marriage-field">Ngày kết hôn<input name="marriageDate" type="date" /></label>
+        <label class="marriage-field">Tình trạng<select name="marriageStatus"><option value="married">Đang là vợ/chồng</option><option value="widowed">Người phối ngẫu đã mất</option><option value="divorced">Đã ly hôn</option><option value="separated">Đã ly thân</option><option value="unknown">Chưa rõ</option></select></label>
+        <label>Ngày sinh<input name="birth" type="text" placeholder="dd/mm/yyyy, mm/yyyy, năm hoặc khoảng năm" /></label>
+        <label>Lịch ngày sinh<select name="birthCalendar"><option value="solar">Dương lịch</option><option value="lunar">Âm lịch</option><option value="unknown">Chưa rõ</option></select></label>
+        <label>Độ chính xác ngày sinh<select name="birthPrecision"><option value="exact">Đầy đủ ngày/tháng/năm</option><option value="month">Chỉ tháng/năm</option><option value="year">Chỉ biết năm</option><option value="about">Khoảng/ước đoán</option><option value="unknown">Không rõ</option></select></label>
+        <label>Ngày mất<input name="death" type="text" placeholder="dd/mm, dd/mm/yyyy, năm hoặc khoảng năm" /></label>
+        <label>Lịch ngày mất<select name="deathCalendar"><option value="lunar">Âm lịch</option><option value="solar">Dương lịch</option><option value="unknown">Chưa rõ</option></select></label>
+        <label>Độ chính xác ngày mất<select name="deathPrecision"><option value="daymonth">Chỉ ngày/tháng (phục vụ cúng giỗ)</option><option value="exact">Đầy đủ ngày/tháng/năm</option><option value="month">Chỉ tháng/năm</option><option value="year">Chỉ biết năm</option><option value="about">Khoảng/ước đoán</option><option value="unknown">Không rõ</option></select></label>
+        <label>Tháng nhuận<select name="deathLeapMonth"><option value="no">Không</option><option value="yes">Có</option><option value="unknown">Chưa rõ</option></select></label>
+        <label>Ngày giỗ hằng năm<input name="anniversary" type="text" placeholder="dd/mm âm lịch, ví dụ 12/08" /></label>
+        <label>Lịch ngày giỗ<select name="anniversaryCalendar"><option value="lunar">Âm lịch</option><option value="solar">Dương lịch</option></select></label>
+        <label class="parent-field">Cha<select name="fatherId"></select></label><label class="parent-field">Mẹ<select name="motherId"></select></label>
+        <label class="parent-field">Quan hệ với cha mẹ<select name="childRelation"><option value="biological">Con ruột</option><option value="adopted">Con nuôi – không nối dõi</option><option value="adopted_heir">Con nuôi kế tự – được dòng họ công nhận nối dõi</option></select></label>
+        <label class="parent-field">Con của bà vợ thứ mấy? (Phòng theo người mẹ)<select name="roomMotherId"></select></label>
+        <label>Nghề nghiệp<input name="occupation" /></label>
+        <label>Quê quán<input name="hometown" list="locationSuggestions" placeholder="Chọn hoặc nhập địa phương khác" /></label>
+        <label class="modern-location-field">Nơi sinh<input name="birthplace" list="locationSuggestions" placeholder="Chọn hoặc nhập địa phương khác" /></label>
+        <label class="modern-location-field">Trú quán hiện tại<input name="residence" list="locationSuggestions" placeholder="Chọn hoặc nhập địa phương khác" /></label>
+        <datalist id="locationSuggestions"></datalist>
+        <label class="wide">Tiểu sử / ghi chú<textarea name="bio" rows="3"></textarea></label>
+      </div>
+      <div class="rule-hint" id="femaleHint">ⓘ Theo quy ước Nam hệ, nữ vẫn có hồ sơ đầy đủ nhưng cây chính dừng tại đây. Con cháu (nếu lưu) được đánh dấu ngoại hệ.</div>
+      <div class="dialog-actions"><button type="button" class="btn" data-close>Hủy</button><button type="submit" class="btn primary" value="save">Lưu hồ sơ</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="detailDialog"><div id="detailContent"></div></dialog>
+  <input type="file" id="restoreInput" accept=".json,.ged,.gedcom,.csv" hidden />
+  <script src="app.js?v=48"></script>
+</body>
+</html>

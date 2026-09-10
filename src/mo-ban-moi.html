@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Đang mở Gia Phả Việt…</title>
+  <style>body{font-family:Arial,Helvetica,sans-serif;display:grid;place-items:center;min-height:100vh;margin:0;background:#f7f2e8;color:#352820}</style>
+</head>
+<body>
+  <p>Đang mở phiên bản mới…</p>
+  <script>
+    (function(){
+      const openApp = () => location.replace('./index.html?fresh=48');
+      // Luôn mở ứng dụng sau tối đa 800 ms, kể cả khi trình duyệt chặn Cache/Service Worker trên file://.
+      const fallback = setTimeout(openApp, 800);
+      (async function(){
+        try {
+          if (location.protocol === 'http:' || location.protocol === 'https:') {
+            if ('serviceWorker' in navigator && navigator.serviceWorker.getRegistrations) {
+              const registrations = await navigator.serviceWorker.getRegistrations();
+              await Promise.all(registrations.map(registration => registration.unregister()));
+            }
+            if ('caches' in window) {
+              const keys = await caches.keys();
+              await Promise.all(keys.filter(key => key.indexOf('gia-pha-viet') === 0).map(key => caches.delete(key)));
+            }
+          }
+        } catch (error) {
+          // Không chặn việc mở ứng dụng nếu trình duyệt từ chối quyền truy cập bộ nhớ đệm.
+        } finally {
+          clearTimeout(fallback);
+          openApp();
+        }
+      })();
+    })();
+  </script>
+</body>
+</html>
