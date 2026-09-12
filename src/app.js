@@ -87,7 +87,7 @@ function renderDashboard(){
  <div class="panel"><div class="panel-head"><h3>Thành viên theo đời</h3></div><div class="generation-bars">${counts.map((n,i)=>`<div><i style="height:${Math.max(8,n/Math.max(...counts)*110)}px"></i>Đời ${i+1}<br><b>${n}</b></div>`).join('')}</div></div></div>`;
 }
 function treeNode(p,depth=0){if(!p||depth>12)return'';const adoptedStop=p.childRelation==='adopted',stop=(db.clan.lineageMode==='patrilineal'&&p.gender==='female')||adoptedStop;const kids=stop?[]:childrenOf(p.id).filter(isMain);const relation=p.childRelation==='adopted_heir'?'<small>Con nuôi kế tự · Được nối dõi</small>':adoptedStop?'<small class="stop">Con nuôi · Không nối dõi</small>':'';return `<li><div class="person-card ${p.gender==='female'?'female':''}" onclick="showPerson('${p.id}')">${avatar(p)}<b>${esc(p.name)}</b><small>Đời ${generation(p.id)||'—'} · ${year(p.birth)}–${p.death?year(p.death):''}</small>${relation}${!adoptedStop&&stop?'<small class="stop">Xuất giá · Dừng nhánh</small>':''}</div>${kids.length?`<ul>${kids.map(k=>treeNode(k,depth+1)).join('')}</ul>`:''}</li>`}
-function renderTree(){const root=person(db.clan.founderId)||db.persons.find(isMain);$('#tree').innerHTML=`<div class="toolbar"><select id="treeBranch"><option value="">Toàn dòng họ</option>${db.branches.map(b=>`<option value="${b.id}">${esc(b.name)}</option>`).join('')}</select><button class="btn" onclick="window.print()">⤓ In / PDF</button><span class="chip">Nam hệ: Nữ dừng nhánh</span></div><div class="tree-wrap">${root?`<ul class="tree-root">${treeNode(root)}</ul>`:`<div class="empty"><h3>Gia phả đang trống</h3><p>Hãy thêm Thủy tổ hoặc thành viên đầu tiên để bắt đầu xây dựng cây.</p><button class="btn primary" onclick="openPersonForm()">＋ Thêm thành viên đầu tiên</button></div>`}</div>`;$('#treeBranch').onchange=e=>{const b=branch(e.target.value);const r=b&&person(b.founderId);const tree=$('.tree-root');if(tree)tree.innerHTML=r?treeNode(r):treeNode(root)}}
+function renderTree(){const root=person(db.clan.founderId)||db.persons.find(isMain);treeZoomLevel=1;$('#tree').innerHTML=`<div class="toolbar"><select id="treeBranch"><option value="">Toàn dòng họ</option>${db.branches.map(b=>`<option value="${b.id}">${esc(b.name)}</option>`).join('')}</select><button class="btn" onclick="window.print()">⤓ In / PDF</button><button class="btn" onclick="startAreaExport()">▦ Chọn vùng & Xuất</button><div class="zoom-controls"><button class="btn small" onclick="treeZoom(-0.1)" title="Thu nhỏ">－</button><span id="zoomLabel">100%</span><button class="btn small" onclick="treeZoom(0.1)" title="Phóng to">＋</button><button class="btn small" onclick="treeZoomReset()" title="Về 100%">Đặt lại</button></div><span class="chip">Nam hệ: Nữ dừng nhánh</span><span class="chip hint">Kéo chuột để di chuyển xem</span></div><div class="tree-wrap">${root?`<div class="tree-zoom-viewport"><ul class="tree-root">${treeNode(root)}</ul></div>`:`<div class="empty"><h3>Gia phả đang trống</h3><p>Hãy thêm Thủy tổ hoặc thành viên đầu tiên để bắt đầu xây dựng cây.</p><button class="btn primary" onclick="openPersonForm()">＋ Thêm thành viên đầu tiên</button></div>`}</div>`;$('#treeBranch').onchange=e=>{const b=branch(e.target.value);const r=b&&person(b.founderId);const tree=$('.tree-root');if(tree)tree.innerHTML=r?treeNode(r):treeNode(root);treeZoomLevel=1;applyTreeZoom()};ensureTreePanHandlers();applyTreeZoom()}
 function renderMembers(q=''){const x=q.toLowerCase();const rows=db.persons.filter(p=>!x||[p.name,p.code,p.hometown,p.occupation,branch(p.branchId)?.name].join(' ').toLowerCase().includes(x));$('#members').innerHTML=`<div class="toolbar"><input class="grow" id="memberSearch" placeholder="Tìm trong danh sách..." value="${esc(q)}"><select id="memberBranch"><option value="">Tất cả chi nhánh</option>${db.branches.map(b=>`<option value="${b.id}">${esc(b.name)}</option>`).join('')}</select><button class="btn primary" onclick="openPersonForm()">＋ Thêm người</button></div><div class="table-wrap"><table><thead><tr><th>Thành viên</th><th>Đời</th><th>Chi · Nhánh</th><th>Năm sinh</th><th>Vai trò</th><th></th></tr></thead><tbody>${rows.map(p=>`<tr data-branch="${p.branchId}"><td><div class="name-cell">${avatar(p)}<div><b>${esc(p.name)}</b><small>${p.code}</small></div></div></td><td>${generation(p.id)||'—'}</td><td>${esc(branch(p.branchId)?.name||'—')}</td><td>${year(p.birth)}</td><td><span class="chip ${p.gender}">${p.membership==='external'?'Ngoại hệ':p.membership==='spouse'?'Phối ngẫu':p.gender==='female'?'Nữ thành viên dòng họ':'Thành viên Nam hệ'}</span></td><td class="actions"><button onclick="showPerson('${p.id}')">◎</button><button onclick="openPersonForm('${p.id}')">✎</button></td></tr>`).join('')}</tbody></table></div>`;$('#memberSearch').oninput=e=>renderMembers(e.target.value);$('#memberBranch').onchange=e=>$$('tbody tr').forEach(r=>r.hidden=!!e.target.value&&r.dataset.branch!==e.target.value)}
 const renderMembersInSavedOrder=renderMembers;renderMembers=function(q=''){renderMembersInSavedOrder('');const tbody=$('#members tbody'),search=$('#memberSearch'),branchSelect=$('#memberBranch');if(!tbody)return;search.placeholder='Chỉ tìm trong Họ và tên thành viên...';search.value=q;const rows=[...tbody.rows].sort((a,b)=>{const codeA=a.querySelector('.name-cell small')?.textContent||'',codeB=b.querySelector('.name-cell small')?.textContent||'',pa=db.persons.find(p=>p.code===codeA),pb=db.persons.find(p=>p.code===codeB);return pa&&pb?personDisplayCompare(pa,pb):0}),apply=()=>{const keyword=normalizeSearch(search.value),branchId=branchSelect.value,matched=rows.filter(row=>{const code=row.querySelector('.name-cell small')?.textContent||'',p=db.persons.find(x=>x.code===code),memberName=normalizeSearch(p?.name);return (!keyword||memberName.includes(keyword))&&(!branchId||p?.branchId===branchId)});tbody.replaceChildren(...matched)};search.oninput=apply;branchSelect.onchange=apply;apply()};
 const renderMembersWithDuplicateMerge=renderMembers;renderMembers=function(q=''){renderMembersWithDuplicateMerge(q);const tbody=$('#members tbody');if(!tbody)return;[...tbody.rows].forEach(row=>{const code=row.querySelector('.name-cell small')?.textContent||'',p=db.persons.find(x=>x.code===code),duplicates=p?db.persons.filter(x=>x.id!==p.id&&duplicateSignature(x)===duplicateSignature(p)):[];if(!duplicates.length)return;const actions=row.querySelector('.actions');if(actions&&!actions.querySelector('.merge-duplicate'))actions.insertAdjacentHTML('afterbegin',`<button class="merge-duplicate" title="Hợp nhất hồ sơ trùng" onclick="mergeVerifiedDuplicate('${p.id}')">⇄ Hợp nhất</button>`)})};
@@ -159,3 +159,167 @@ const showPersonWithDates=window.showPerson;window.showPerson=function(id){showP
 const showPersonWithLocations=window.showPerson;window.showPerson=function(id){showPersonWithLocations(id);const p=person(id),actions=$('#detailContent .profile-actions');if(p&&actions){const modern=generation(p.id)>=10?` · Nơi sinh: ${esc(p.birthplace||'Chưa rõ')} · Trú quán: ${esc(p.residence||'Chưa rõ')}`:'';actions.insertAdjacentHTML('beforebegin',`<div class="rule-hint"><b>Địa danh:</b> Quê quán: ${esc(p.hometown||'Chưa rõ')}${modern}</div>`)}}
 function cleanupLegacyRootBranches(){const invalidIds=new Set(db.branches.filter(b=>{const founder=person(b.founderId);return Number(b.startGeneration)===1||!!(founder&&generation(founder.id)===1&&String(b.name||'').startsWith('Nhánh thứ'))}).map(b=>b.id));if(invalidIds.size)db.branches=db.branches.filter(b=>!invalidIds.has(b.id));db.persons.forEach(p=>{const isRoot=generation(p.id)===1||Number(p.generationOverride)===1;if(invalidIds.has(p.branchId)||p.membership==='spouse'||isRoot)p.branchId='';if(p.membership==='spouse'||isRoot){p.startsBranch='no';p.branchOrder=''}})}
 cleanupLegacyRootBranches();synchronizeLinkedData();renderAll();save();
+
+// ===== Chọn vùng bằng chuột & Xuất PDF/Word cho Cây gia phả =====
+function startAreaExport(){
+  const wrap = document.querySelector('.tree-wrap');
+  if(!wrap){ alert('Không tìm thấy cây gia phả để chọn vùng.'); return; }
+  if(wrap.querySelector('.area-select-overlay')) return; // đang chọn rồi
+  wrap.style.position = wrap.style.position || 'relative';
+  const overlay = document.createElement('div');
+  overlay.className = 'area-select-overlay';
+  wrap.appendChild(overlay);
+  let rectEl=null, startX=0, startY=0, dragging=false;
+
+  function norm(x1,y1,x2,y2){return {x:Math.min(x1,x2),y:Math.min(y1,y2),w:Math.abs(x2-x1),h:Math.abs(y2-y1)};}
+  function toContentXY(e){
+    const r = wrap.getBoundingClientRect();
+    return {x: e.clientX - r.left + wrap.scrollLeft, y: e.clientY - r.top + wrap.scrollTop};
+  }
+  function drawRect(sel){
+    rectEl.style.left=(sel.x-wrap.scrollLeft)+'px';
+    rectEl.style.top=(sel.y-wrap.scrollTop)+'px';
+    rectEl.style.width=sel.w+'px';
+    rectEl.style.height=sel.h+'px';
+  }
+  function onDown(e){
+    dragging=true;
+    const p=toContentXY(e); startX=p.x; startY=p.y;
+    if(rectEl) rectEl.remove();
+    rectEl=document.createElement('div'); rectEl.className='area-select-rect';
+    overlay.appendChild(rectEl);
+    drawRect(norm(startX,startY,startX,startY));
+    e.preventDefault();
+  }
+  function onMove(e){
+    if(!dragging) return;
+    const p=toContentXY(e);
+    drawRect(norm(startX,startY,p.x,p.y));
+  }
+  function onUp(e){
+    if(!dragging) return;
+    dragging=false;
+    const p=toContentXY(e);
+    const sel=norm(startX,startY,p.x,p.y);
+    if(sel.w<15||sel.h<15){ cleanup(); return; }
+    showToolbar(sel);
+  }
+  function showToolbar(sel){
+    const bar=document.createElement('div');
+    bar.className='area-select-toolbar';
+    bar.style.left=(sel.x-wrap.scrollLeft)+'px';
+    bar.style.top=(sel.y-wrap.scrollTop+sel.h+8)+'px';
+    bar.innerHTML='<button class="btn small" data-act="pdf">⤓ Xuất PDF</button><button class="btn small" data-act="word">⤓ Xuất Word</button><button class="btn small" data-act="cancel">✕ Huỷ</button>';
+    overlay.appendChild(bar);
+    bar.querySelector('[data-act="pdf"]').onclick=()=>doExport(sel,'pdf',bar);
+    bar.querySelector('[data-act="word"]').onclick=()=>doExport(sel,'word',bar);
+    bar.querySelector('[data-act="cancel"]').onclick=cleanup;
+  }
+  function cleanup(){
+    overlay.removeEventListener('mousedown', onDown);
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    overlay.remove();
+  }
+  async function doExport(sel, kind, bar){
+    bar.innerHTML='<span class="chip">Đang xử lý…</span>';
+    overlay.style.display='none';
+    try{
+      const canvas = await html2canvas(wrap, {backgroundColor:'#f2ecdf', scale:2, useCORS:true});
+      const scaleX = canvas.width / wrap.scrollWidth;
+      const scaleY = canvas.height / wrap.scrollHeight;
+      const crop = document.createElement('canvas');
+      crop.width = Math.max(1, Math.round(sel.w*scaleX));
+      crop.height = Math.max(1, Math.round(sel.h*scaleY));
+      const ctx = crop.getContext('2d');
+      ctx.drawImage(canvas, sel.x*scaleX, sel.y*scaleY, sel.w*scaleX, sel.h*scaleY, 0, 0, crop.width, crop.height);
+      const dataUrl = crop.toDataURL('image/png');
+      const clanName = (db.clan && db.clan.name ? db.clan.name : 'gia-pha').normalize('NFC').replace(/[\\/:*?"<>|]/g,'').trim().replace(/\s+/g,'-');
+      if(kind==='pdf'){
+        const { jsPDF } = window.jspdf;
+        const orientation = crop.width>crop.height?'l':'p';
+        const pdf = new jsPDF({orientation, unit:'px', format:[crop.width, crop.height]});
+        pdf.addImage(dataUrl,'PNG',0,0,crop.width,crop.height);
+        pdf.save(`cay-gia-pha-${clanName}.pdf`);
+      }else{
+        const html = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0"><img src="${dataUrl}" style="max-width:100%"/></body></html>`;
+        const blob = window.htmlDocx.asBlob(html, {orientation: crop.width>crop.height?'landscape':'portrait'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href=url; a.download=`cay-gia-pha-${clanName}.docx`;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(()=>URL.revokeObjectURL(url), 4000);
+      }
+    }catch(err){
+      alert('Xuất file thất bại: '+(err&&err.message?err.message:err));
+    }
+    overlay.style.display='';
+    cleanup();
+  }
+
+  overlay.addEventListener('mousedown', onDown);
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+// ===== Zoom in/out & Pan bằng chuột cho Cây gia phả =====
+var treeZoomLevel = 1;
+function applyTreeZoom(){
+  const root = document.querySelector('.tree-root');
+  const viewport = document.querySelector('.tree-zoom-viewport');
+  if(root && viewport){
+    root.style.transform = 'none';
+    viewport.style.width = '';
+    viewport.style.height = '';
+    const baseW = root.scrollWidth, baseH = root.scrollHeight;
+    if(baseW>0 && baseH>0){
+      root.style.transform = `scale(${treeZoomLevel})`;
+      root.style.transformOrigin = 'top left';
+      viewport.style.width = (baseW*treeZoomLevel)+'px';
+      viewport.style.height = (baseH*treeZoomLevel)+'px';
+    }
+  }
+  const label = document.getElementById('zoomLabel');
+  if(label) label.textContent = Math.round(treeZoomLevel*100)+'%';
+}
+function treeZoom(delta){
+  treeZoomLevel = Math.min(2, Math.max(0.4, +(treeZoomLevel+delta).toFixed(2)));
+  applyTreeZoom();
+}
+function treeZoomReset(){ treeZoomLevel = 1; applyTreeZoom(); }
+
+var __treePanInit = false;
+function ensureTreePanHandlers(){
+  if(__treePanInit) return;
+  __treePanInit = true;
+  let panning=false, startX=0, startY=0, startLeft=0, startTop=0, moved=0, wrapEl=null;
+  document.addEventListener('mousedown', e=>{
+    const wrap = e.target.closest && e.target.closest('.tree-wrap');
+    if(!wrap) return;
+    if(e.target.closest('.area-select-overlay')) return; // đang ở chế độ chọn vùng, không pan
+    if(e.button !== 0) return;
+    panning=true; moved=0; wrapEl=wrap;
+    startX=e.clientX; startY=e.clientY;
+    startLeft=wrap.scrollLeft; startTop=wrap.scrollTop;
+    wrap.classList.add('panning');
+  });
+  document.addEventListener('mousemove', e=>{
+    if(!panning||!wrapEl) return;
+    const dx=e.clientX-startX, dy=e.clientY-startY;
+    moved=Math.max(moved, Math.abs(dx), Math.abs(dy));
+    wrapEl.scrollLeft = startLeft - dx;
+    wrapEl.scrollTop = startTop - dy;
+  });
+  document.addEventListener('mouseup', ()=>{
+    if(!panning) return;
+    panning=false;
+    if(wrapEl){
+      wrapEl.classList.remove('panning');
+      if(moved>4){ const w=wrapEl; w.dataset.justDragged='1'; setTimeout(()=>{ delete w.dataset.justDragged; },50); }
+    }
+    wrapEl=null;
+  });
+  document.addEventListener('click', e=>{
+    const wrap = e.target.closest && e.target.closest('.tree-wrap');
+    if(wrap && wrap.dataset.justDragged){ e.stopPropagation(); e.preventDefault(); }
+  }, true);
+}
