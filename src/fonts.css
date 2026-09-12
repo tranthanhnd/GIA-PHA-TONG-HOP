@@ -1,9 +1,0 @@
-/* Font Unicode phổ biến, ổn định cho nội dung tiếng Việt. */
-html, body, button, input, select, textarea, table,
-h1, h2, h3, h4, h5, h6, strong, b, small, label, p, span, div {
-  font-family: Arial, sans-serif !important;
-  letter-spacing: normal !important;
-  word-spacing: normal !important;
-  font-kerning: normal;
-  font-variant-ligatures: normal;
-}
