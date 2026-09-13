@@ -12,10 +12,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: "macos-latest"
-            args: "--target aarch64-apple-darwin"
-          - platform: "macos-latest"
-            args: "--target x86_64-apple-darwin"
           - platform: "windows-latest"
             args: ""
 
@@ -30,8 +26,6 @@ jobs:
 
       - name: Cài Rust
         uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       - name: Cài thư viện npm
         run: npm install
@@ -40,16 +34,10 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           tagName: tong-hop-v__VERSION__
-          releaseName: "Gia Phả Việt - Bản Tổng Hợp v__VERSION__"
-          releaseBody: "Bản cài đặt tự động cho Windows và macOS."
+          releaseName: "Gia Phả Việt v__VERSION__"
+          releaseBody: "Bản cài đặt tự động cho Windows."
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
