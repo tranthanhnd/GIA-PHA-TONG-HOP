@@ -1,5 +1,5 @@
 # Gia Phả Việt — Bản Tổng Hợp (dự án đóng gói Tauri)
-
+![Build Status](https://github.com/tranthanhnd/GIA-PHA-TONG-HOP/actions/workflows/build.yml/badge.svg?branch=release)
 Đây là bộ khung để đóng gói app Gia Phả Việt (bản Tổng hợp) thành file cài đặt
 cho Windows (.msi/.exe) và macOS (.dmg), tự động qua GitHub Actions.
 
